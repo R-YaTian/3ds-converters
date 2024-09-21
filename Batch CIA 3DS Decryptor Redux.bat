@@ -55,6 +55,7 @@ echo.
 echo.
 echo   Decrypting...
 echo.
+goto continueScript
 set "validchars=-_abcdefghijklmnopqrstuvwxyz1234567890. "
 for %%b in (*) do (
 	set "newname="
