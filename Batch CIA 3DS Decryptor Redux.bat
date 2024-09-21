@@ -18,7 +18,7 @@ echo [^^] = Warning>>%logfile%
 echo.>>%logfile%
 echo Batch CIA 3DS Decryptor Redux %ScriptVersion%>>%logfile%
 echo %date% - %time:~0,-3% = [i] Script started>>%logfile%
-if not "%PROCESSOR_ARCHITECTURE%"=="AMD64" goto unsupported
+goto DisableCCI
 if exist "*.cia" (
     cls
 	echo.
@@ -72,8 +72,8 @@ if "!validchars:%c1%=!" neq "%validchars%" set "newname=%newname%%c1%"
 goto validate
 
 :continueScript
-for %%a in (bin\*.ncch) do (
-	echo %date% - %time:~0,-3% = [i] Found unsed NCCH file. Start deleting.>>%logfile%
+for %%a in (*.ncch) do (
+	echo %date% - %time:~0,-3% = [i] Found unused NCCH file. Start deleting.>>%logfile%
 	del "%%a"
 )
 for %%a in (*.3ds) do (
@@ -83,15 +83,15 @@ for %%a in (*.3ds) do (
 		echo | bin\decrypt.exe "%%a%" >nul
 		set state=1
 		set ARG=
-		for %%f in ("bin\!CUTN!.*.ncch") do (
-			if %%f==bin\!CUTN!.Main.ncch set i=0
-			if %%f==bin\!CUTN!.Manual.ncch set i=1
-			if %%f==bin\!CUTN!.DownloadPlay.ncch set i=2
-			if %%f==bin\!CUTN!.Partition4.ncch set i=3
-			if %%f==bin\!CUTN!.Partition5.ncch set i=4
-			if %%f==bin\!CUTN!.Partition6.ncch set i=5
-			if %%f==bin\!CUTN!.N3DSUpdateData.ncch set i=6
-			if %%f==bin\!CUTN!.UpdateData.ncch set i=7
+		for %%f in ("!CUTN!.*.ncch") do (
+			if %%f==!CUTN!.Main.00000000.ncch set i=0
+			if %%f==!CUTN!.Manual.00000001.ncch set i=1
+			if %%f==!CUTN!.DownloadPlay.00000002.ncch set i=2
+			if %%f==!CUTN!.Partition4.00000003.ncch set i=3
+			if %%f==!CUTN!.Partition5.00000004.ncch set i=4
+			if %%f==!CUTN!.Partition6.00000005.ncch set i=5
+			if %%f==!CUTN!.N3DSUpdateData.00000006.ncch set i=6
+			if %%f==!CUTN!.UpdateData.00000007.ncch set i=7
 			set ARG=!ARG! -i "%%f:!i!:!i!"
 		)
 		bin\makerom.exe -f cci -ignoresign -target p -o "%rootdir%\!CUTN!-decrypted.3ds"!ARG! >nul 2>nul
@@ -103,7 +103,7 @@ for %%a in (*.3ds) do (
 			set permanentstate=1
 		)
 	)
-	for %%a in (bin\*.ncch) do del /s "%%a" >nul 2>&1
+	for %%a in (*.ncch) do del /s "%%a" >nul 2>&1
 )
 for %%a in (*.cia) do (
 	set CUTN=%%~na
@@ -130,9 +130,9 @@ for %%a in (*.cia) do (
         		echo %date% - %time:~0,-3% = [i] CIA file "!CUTN!.cia" [!TitleId! v!TitleVersion!] is a eShop or Gamecard title>>%logfile%
         		set CIAType=1
         		echo | bin\decrypt.exe "%%a" >nul 2>nul
-        		for %%f in ("bin\!CUTN!.*.ncch") do (
-        			set ARG=!ARG! -i "%%f:!i!:!i!"
-        			set /a i+=1
+        		for %%f in ("!CUTN!.*.ncch") do (
+        			set CONLINE=%%f
+					call :EXF
         		)
         		echo %date% - %time:~0,-3% = [i] Calling makerom for eShop or Gamecard CIA [!TitleId!]>>%logfile%
         		bin\makerom.exe -f cia -ignoresign -target p -o "%rootdir%\!CUTN! Game-decrypted.cia"!ARG! -ver !TitleVersion! >nul 2>nul
@@ -156,9 +156,9 @@ for %%a in (*.cia) do (
         		findstr /i /pr "00040138" !FILE! | findstr /C:"Title id" echo %date% - %time:~0,-3% = [i] CIA file "!CUTN!.cia" is a system firmware>>%logfile%
         		set CIAType=1
         		echo | bin\decrypt.exe "%%a" >nul 2>nul
-        		for %%f in ("bin\!CUTN!.*.ncch") do (
-        			set ARG=!ARG! -i "%%f:!i!:!i!"
-        			set /a i+=1
+        		for %%f in ("!CUTN!.*.ncch") do (
+        			set CONLINE=%%f
+					call :EXF
         		)
         		echo %date% - %time:~0,-3% = [i] Calling makerom for system title CIA [!TitleId!]>>%logfile%
         		bin\makerom.exe -f cia -ignoresign -target p -o "%rootdir%\!CUTN! System-decrypted.cia"!ARG! -ver !TitleVersion! >nul 2>nul
@@ -177,9 +177,9 @@ for %%a in (*.cia) do (
         		echo %date% - %time:~0,-3% = [i] CIA file "!CUTN!.cia" [!TitleId! v!TitleVersion!] is a demo title>>%logfile%
         		set CIAType=1
         		echo | bin\decrypt.exe "%%a" >nul 2>nul
-        		for %%f in ("bin\!CUTN!.*.ncch") do (
-        			set ARG=!ARG! -i "%%f:!i!:!i!"
-        			set /a i+=1
+        		for %%f in ("!CUTN!.*.ncch") do (
+        			set CONLINE=%%f
+					call :EXF
         		)
         		echo %date% - %time:~0,-3% = [i] Calling makerom for demo CIA [!TitleId!]>>%logfile%
         		bin\makerom.exe -f cia -ignoresign -target p -o "%rootdir%\!CUTN! Demo-decrypted.cia"!ARG! -ver !TitleVersion! >nul 2>nul
@@ -197,15 +197,9 @@ for %%a in (*.cia) do (
         		set state=1
         		echo %date% - %time:~0,-3% = [i] CIA file "!CUTN!.cia" [!TitleId! v!TitleVersion!] is a update or DLC title>>%logfile%
         		set CIAType=1
-        		set TEXT="ContentId:"
-        		set /a X=0
         		echo | bin\decrypt.exe "%%a" >nul 2>nul
-				for %%f in ("bin\!CUTN!.*.ncch") do (
-					set ARG=!ARG! -i "%%f:!i!:!i!"
-					set /a i+=1
-				)
-				for /f "delims=" %%d in ('findstr /c:!TEXT! !FILE!') do (
-					set CONLINE=%%d
+				for %%f in ("!CUTN!.*.ncch") do (
+					set CONLINE=%%f
 					call :EXF
 				)
 				REM Patches
@@ -270,7 +264,7 @@ for %%a in (*.cia) do (
 			findstr /i /pr "00048005" !FILE! | findstr /C:"Title id" echo %date% - %time:~0,-3% = [i] CTRTool does not support TWL titles "!CUTN!.cia" [!TitleId! v!TitleVersion!] [DSiWare Ports]>>%logfile%
 		)
 	)
-	for %%a in (bin\*.ncch) do del /s "%%a" >nul 2>&1
+	for %%a in (*.ncch) do del /s "%%a" >nul 2>&1
 )
 if exist "!content!" del /s "!content!" >nul 2>&1
 if "%state%"=="0" if "%permanentstate%"=="0" goto noFilesDecrypted
@@ -296,17 +290,11 @@ echo %date% - %time:~0,-3% = [i] Script execution ended>>%logfile%
 exit
 
 :EXF
-if !X! geq !i! (
-	if exist bin\!CUTN!.!i!.ncch (
-		set CONLINE=!CONLINE:~24,8!
-		call :GETX !CONLINE!, ID
-		set ARG=!ARG! -i "bin\!CUTN!.!i!.ncch:!i!:!ID!"
-		set /a i+=1
-	) else (
-		set /a i+=1
-		goto EXF
-	)
-)
+set PARSE=!CONLINE:~-15!
+set i=!PARSE:~0,1!
+set CONLINE=!PARSE:~2,8!
+call :GETX !CONLINE!, ID
+set ARG=!ARG! -i "!CUTN!.!i!.!CONLINE!.ncch:!i!:!ID!"
 exit/B
 
 :GETX v dec
