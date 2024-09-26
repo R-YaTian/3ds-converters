@@ -201,13 +201,13 @@ for %%a in (*.cia) do (
         		echo %date% - %time:~0,-3% = [i] CIA file "!CUTN!.cia" [!TitleId! v!TitleVersion!] is a update or DLC title>>%logfile%
         		set CIAType=1
         		echo | bin\decrypt.exe "%%a" >nul 2>nul
-				for %%f in ("!CUTN!.*.ncch") do (
-					set CONLINE=%%f
-					call :EXF
-				)
 				REM Patches
 				findstr /i /pr "0004000e" !FILE! | findstr /C:"Title id" >nul 2>nul
 				if not errorlevel 1 (
+					for %%f in ("!CUTN!.*.ncch") do (
+						set CONLINE=%%f
+						call :EXF
+					)
 					echo %date% - %time:~0,-3% = [i] Calling makerom for update CIA [!TitleId! v!TitleVersion!]>>%logfile%
 					%MakeROM% -f cia -ignoresign -target p -o "!CUTN! Patch-decrypted.cia"!ARG! -ver !TitleVersion! > %logfile%
 					if not exist "%rootdir%\!CUTN! Patch-decrypted.cia" (
@@ -222,7 +222,7 @@ for %%a in (*.cia) do (
 				findstr /i /pr "0004008c" !FILE! | findstr /C:"Title id" >nul 2>nul
 				if not errorlevel 1 (
 					echo %date% - %time:~0,-3% = [i] Calling makerom for DLC CIA [!TitleId! v!TitleVersion!]>>%logfile%
-					%MakeROM% -f cia -dlc -ignoresign -target p -o "!CUTN! DLC-decrypted.cia"!ARG! -ver !TitleVersion! > %logfile%
+					bin\dlchelper.exe !TitleVersion! > %logfile%
 					if not exist "%rootdir%\!CUTN! DLC-decrypted.cia" (
 						echo %date% - %time:~0,-3% = [^^!] Decrypting failed for [!TitleId! v!TitleVersion!]>>%logfile%
 						set state=0
