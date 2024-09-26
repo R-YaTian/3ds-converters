@@ -1,6 +1,6 @@
 @echo off
 setlocal EnableDelayedExpansion
-title 3DS_Converters V1.1
+title 3DS_Converters V1.2
 echo A tool to convert CIA into CCI and also to decrypt them and make them playable in citra!
 echo shijimasoft - decrypt.exe (Aka Rust ctrdecrypt)
 echo 3DSGuy ^& jakcron - makerom.exe, ctrtool.exe
@@ -10,6 +10,8 @@ echo rohithvishaal - original python version of this batch
 echo R-YaTian - this automation batch
 echo make sure the file and the script are in the same folder!
 echo.
+set MakeROM=bin\makerom.exe
+if not "%PROCESSOR_ARCHITECTURE%"=="AMD64" set MakeROM=bin\makerom_x86.exe
 :start
 echo MENU:
 echo 0)CCI to CIA converter (via makerom by 3DSGuy ^& jakcron)
@@ -33,7 +35,7 @@ goto start
 :0
 set /p RomName="Enter rom name: "
 echo Beggining Conversion!
-bin\\makerom -ccitocia "%RomName%"
+%MakeROM% -ccitocia "%RomName%"
 echo conversion Complete!
 pause
 color && cls
@@ -56,7 +58,7 @@ pause
 :3
 set /p RomName="Enter rom name: "
 echo Beggining Conversion to .cci!
-bin\\makerom -ciatocci "%RomName%"
+%MakeROM% -ciatocci "%RomName%"
 echo conversion Complete!
 pause
 color && cls
@@ -96,7 +98,7 @@ for %%f in ("%CUTN%.*.ncch") do (
         if !i!==!j! set ARG=!ARG! -i "%%k:!i!:!cid!"
     )
 )
-bin\makerom.exe -f cia -ignoresign -target p -o "!CUTB!_repack.cia"!ARG! -ver !TitleVersion! >nul 2>nul
+%MakeROM% -f cia -ignoresign -target p -o "!CUTB!_repack.cia"!ARG! -ver !TitleVersion!
 for %%a in (*.ncch) do del /s "%%a" >nul 2>&1
 if exist "!content!" del /s "!content!" >nul 2>&1
 echo conversion Complete!
@@ -108,9 +110,13 @@ color && cls
 exit
 
 :EXF
-set PARSE=!CONLINE:~-15!
-set i=!PARSE:~0,1!
-set CONLINE=!PARSE:~2,8!
+call :ReverseString !CONLINE! PARSE
+for /f "tokens=1,2,3 delims=." %%a in ("!PARSE!") do (
+    set CONLINE=%%b
+    set i=%%c
+)
+call :ReverseString !CONLINE! CONLINE
+call :ReverseString !i! i
 call :GETX !CONLINE!, ID
 set cid=!ID!
 exit/B
@@ -118,4 +124,16 @@ exit/B
 :GETX v dec
 set /a dec=0x%~1
 if [%~2] neq [] set %~2=%dec%
+exit/b
+
+:ReverseString
+set str=%~1
+set reversed=
+for /l %%j in (0,1,255) do (
+    set char=!str:~%%j,1!
+    if !char!=="" goto :reversedone
+    set reversed=!char!!reversed!
+)
+:reversedone
+set %2=%reversed%
 exit/b

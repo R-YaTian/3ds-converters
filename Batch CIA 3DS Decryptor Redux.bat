@@ -8,6 +8,7 @@ set convertToCCI=0
 set rootdir=%cd%
 set content=bin^\CTR_Content.txt
 set logfile=log^\programlog.txt
+set MakeROM=bin\makerom.exe
 title Batch CIA 3DS Decryptor Redux %ScriptVersion%
 if not exist "log" mkdir log
 echo Batch CIA 3DS Decryptor Redux>%logfile%
@@ -18,6 +19,7 @@ echo [^^] = Warning>>%logfile%
 echo.>>%logfile%
 echo Batch CIA 3DS Decryptor Redux %ScriptVersion%>>%logfile%
 echo %date% - %time:~0,-3% = [i] Script started>>%logfile%
+if not "%PROCESSOR_ARCHITECTURE%"=="AMD64" set MakeROM=bin\makerom_x86.exe
 goto DisableCCI
 if exist "*.cia" (
     cls
@@ -95,7 +97,7 @@ for %%a in (*.3ds) do (
 			if %%f==!CUTN!.UpdateData.00000007.ncch set i=7
 			set ARG=!ARG! -i "%%f:!i!:!i!"
 		)
-		bin\makerom.exe -f cci -ignoresign -target p -o "%rootdir%\!CUTN!-decrypted.3ds"!ARG! >nul 2>nul
+		%MakeROM% -f cci -ignoresign -target p -o "%rootdir%\!CUTN!-decrypted.3ds"!ARG! > %logfile%
 		if not exist "!CUTN!-decrypted.3ds" (
 			echo %date% - %time:~0,-3% = [^^!] Decrypting failed for !CUTN!.3ds>>%logfile%
 			set state=0
@@ -136,7 +138,7 @@ for %%a in (*.cia) do (
 					call :EXF
         		)
         		echo %date% - %time:~0,-3% = [i] Calling makerom for eShop or Gamecard CIA [!TitleId!]>>%logfile%
-        		bin\makerom.exe -f cia -ignoresign -target p -o "%rootdir%\!CUTN! Game-decrypted.cia"!ARG! -ver !TitleVersion! >nul 2>nul
+        		%MakeROM% -f cia -ignoresign -target p -o "%rootdir%\!CUTN! Game-decrypted.cia"!ARG! -ver !TitleVersion! > %logfile%
 				if not exist "%rootdir%\!CUTN! Game-decrypted.cia" (
 					echo %date% - %time:~0,-3% = [^^!] Decrypting failed for [!TitleId! v!TitleVersion!]>>%logfile%
 					set state=0
@@ -162,7 +164,7 @@ for %%a in (*.cia) do (
 					call :EXF
         		)
         		echo %date% - %time:~0,-3% = [i] Calling makerom for system title CIA [!TitleId!]>>%logfile%
-        		bin\makerom.exe -f cia -ignoresign -target p -o "%rootdir%\!CUTN! System-decrypted.cia"!ARG! -ver !TitleVersion! >nul 2>nul
+        		%MakeROM% -f cia -ignoresign -target p -o "%rootdir%\!CUTN! System-decrypted.cia"!ARG! -ver !TitleVersion! > %logfile%
 				if not exist "%rootdir%\!CUTN! System-decrypted.cia" (
 					echo %date% - %time:~0,-3% = [^^!] Decrypting failed for [!TitleId! v!TitleVersion!]>>%logfile%
 					set state=0
@@ -183,7 +185,7 @@ for %%a in (*.cia) do (
 					call :EXF
         		)
         		echo %date% - %time:~0,-3% = [i] Calling makerom for demo CIA [!TitleId!]>>%logfile%
-        		bin\makerom.exe -f cia -ignoresign -target p -o "%rootdir%\!CUTN! Demo-decrypted.cia"!ARG! -ver !TitleVersion! >nul 2>nul
+        		%MakeROM% -f cia -ignoresign -target p -o "%rootdir%\!CUTN! Demo-decrypted.cia"!ARG! -ver !TitleVersion! > %logfile%
 				if not exist "%rootdir%\!CUTN! Demo-decrypted.cia" (
 					echo %date% - %time:~0,-3% = [^^!] Decrypting failed for [!TitleId! v!TitleVersion!]>>%logfile%
 					set state=0
@@ -207,7 +209,7 @@ for %%a in (*.cia) do (
 				findstr /i /pr "0004000e" !FILE! | findstr /C:"Title id" >nul 2>nul
 				if not errorlevel 1 (
 					echo %date% - %time:~0,-3% = [i] Calling makerom for update CIA [!TitleId! v!TitleVersion!]>>%logfile%
-					bin\makerom.exe -f cia -ignoresign -target p -o "!CUTN! Patch-decrypted.cia"!ARG! -ver !TitleVersion! >nul 2>nul
+					%MakeROM% -f cia -ignoresign -target p -o "!CUTN! Patch-decrypted.cia"!ARG! -ver !TitleVersion! > %logfile%
 					if not exist "%rootdir%\!CUTN! Patch-decrypted.cia" (
 						echo %date% - %time:~0,-3% = [^^!] Decrypting failed for [!TitleId! v!TitleVersion!]>>%logfile%
 						set state=0
@@ -220,7 +222,7 @@ for %%a in (*.cia) do (
 				findstr /i /pr "0004008c" !FILE! | findstr /C:"Title id" >nul 2>nul
 				if not errorlevel 1 (
 					echo %date% - %time:~0,-3% = [i] Calling makerom for DLC CIA [!TitleId! v!TitleVersion!]>>%logfile%
-					bin\makerom.exe -f cia -dlc -ignoresign -target p -o "!CUTN! DLC-decrypted.cia"!ARG! -ver !TitleVersion! >nul 2>nul
+					%MakeROM% -f cia -dlc -ignoresign -target p -o "!CUTN! DLC-decrypted.cia"!ARG! -ver !TitleVersion! > %logfile%
 					if not exist "%rootdir%\!CUTN! DLC-decrypted.cia" (
 						echo %date% - %time:~0,-3% = [^^!] Decrypting failed for [!TitleId! v!TitleVersion!]>>%logfile%
 						set state=0
@@ -233,7 +235,7 @@ for %%a in (*.cia) do (
 			if "!convertToCCI!"=="1" (
 				for %%a in (*-decrypted.cia) do (
 					set CUTN=%%~na
-					bin\makerom.exe -ciatocci "!CUTN!.cia" -o "!CUTN!.cci" >nul 2>nul
+					%MakeROM% -ciatocci "!CUTN!.cia" -o "!CUTN!.cci" > %logfile%
 					del /F /Q "%rootdir%\!CUTN!.cia" >nul 2>nul
 					if not exist "%rootdir%\!CUTN!.cci" (
 						echo %date% - %time:~0,-3% = [^^!] Converting to CCI failed for [!TitleId! v!TitleVersion!]>>%logfile%
@@ -291,9 +293,13 @@ echo %date% - %time:~0,-3% = [i] Script execution ended>>%logfile%
 exit
 
 :EXF
-set PARSE=!CONLINE:~-15!
-set i=!PARSE:~0,1!
-set CONLINE=!PARSE:~2,8!
+call :ReverseString !CONLINE! PARSE
+for /f "tokens=1,2,3 delims=." %%a in ("!PARSE!") do (
+    set CONLINE=%%b
+    set i=%%c
+)
+call :ReverseString !CONLINE! CONLINE
+call :ReverseString !i! i
 call :GETX !CONLINE!, ID
 set ARG=!ARG! -i "!CUTN!.!i!.!CONLINE!.ncch:!i!:!ID!"
 exit/B
@@ -301,6 +307,18 @@ exit/B
 :GETX v dec
 set /a dec=0x%~1
 if [%~2] neq [] set %~2=%dec%
+exit/b
+
+:ReverseString
+set str=%~1
+set reversed=
+for /l %%j in (0,1,255) do (
+    set char=!str:~%%j,1!
+    if !char!=="" goto :reversedone
+    set reversed=!char!!reversed!
+)
+:reversedone
+set %2=%reversed%
 exit/b
 
 :noFilesDecrypted
