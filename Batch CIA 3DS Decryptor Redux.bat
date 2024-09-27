@@ -134,7 +134,7 @@ for %%a in (*.cia) do (
         		set CIAType=1
         		echo | bin\decrypt.exe "%%a" >nul 2>nul
         		for %%f in ("!CUTN!.*.ncch") do (
-        			set CONLINE=%%f
+        			set CONLINE="%%f"
 					call :EXF
         		)
         		echo %date% - %time:~0,-3% = [i] Calling makerom for eShop or Gamecard CIA [!TitleId!]>>%logfile%
@@ -160,7 +160,7 @@ for %%a in (*.cia) do (
         		set CIAType=1
         		echo | bin\decrypt.exe "%%a" >nul 2>nul
         		for %%f in ("!CUTN!.*.ncch") do (
-        			set CONLINE=%%f
+        			set CONLINE="%%f"
 					call :EXF
         		)
         		echo %date% - %time:~0,-3% = [i] Calling makerom for system title CIA [!TitleId!]>>%logfile%
@@ -181,7 +181,7 @@ for %%a in (*.cia) do (
         		set CIAType=1
         		echo | bin\decrypt.exe "%%a" >nul 2>nul
         		for %%f in ("!CUTN!.*.ncch") do (
-        			set CONLINE=%%f
+        			set CONLINE="%%f"
 					call :EXF
         		)
         		echo %date% - %time:~0,-3% = [i] Calling makerom for demo CIA [!TitleId!]>>%logfile%
@@ -205,7 +205,7 @@ for %%a in (*.cia) do (
 				findstr /i /pr "0004000e" !FILE! | findstr /C:"Title id" >nul 2>nul
 				if not errorlevel 1 (
 					for %%f in ("!CUTN!.*.ncch") do (
-						set CONLINE=%%f
+						set CONLINE="%%f"
 						call :EXF
 					)
 					echo %date% - %time:~0,-3% = [i] Calling makerom for update CIA [!TitleId! v!TitleVersion!]>>%logfile%
